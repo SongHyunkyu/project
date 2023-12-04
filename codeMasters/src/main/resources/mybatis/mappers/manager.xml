@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="manager">
+		
+	<resultMap id="bookMap" type="bookDTO">
+		<result property="book_number" column="book_number" />
+		<result property="book_name" column="book_name" />
+		<result property="book_price" column="book_price" />
+		<result property="book_img" column="book_img" />
+		<result property="publication_date" column="publication_date" />
+		<result property="author" column="author" />
+		<result property="translator" column="translator" />
+		<result property="publisher" column="publisher" />
+		<result property="book_detail" column="book_detail" />
+		<result property="like_count" column="like_count" />
+		<result property="star_count" column="star_count" />
+		<result property="star_sum" column="star_sum" />
+	</resultMap>
+
+	<resultMap id="memberMap" type="memberDTO">
+		<result property="member_number" column="member_number" />
+		<result property="mid" column="mid" />
+		<result property="mpw" column="mpw" />
+		<result property="mname" column="mname" />
+		<result property="birthday" column="birthday" />
+		<result property="gender" column="gender" />
+		<result property="email" column="email" />
+		<result property="phone_number" column="phone_number" />
+		<result property="join_date" column="join_date" />
+		<result property="member_grade" column="member_grade" />
+		<result property="password_question" column="password_question" />
+		<result property="password_answer" column="password_answer" />
+	</resultMap>
+
+	<resultMap id="noticeMap" type="noticeDTO">
+		<result property="notice_number" column="notice_number" />
+		<result property="notice_name" column="notice_name" />
+		<result property="notice_detail" column="notice_detail" />
+		<result property="notice_date" column="notice_date" />
+	</resultMap>
+
+	<resultMap id="eventMap" type="eventDTO">
+		<result property="event_number" column="event_number" />
+		<result property="event_name" column="event_name" />
+		<result property="event_detail" column="event_detail" />
+		<result property="event_img" column="event_img" />
+		<result property="event_period_start" column="event_period_start" />
+		<result property="event_period_end" column="event_period_end" />
+		<result property="event_date" column="event_date" />
+	</resultMap>
+
+	<resultMap id="inquiryMap" type="inquiryDTO">
+		<result property="inquiry_number" column="inquiry_number" />
+		<result property="inquiry_detail" column="inquiry_detail" />
+		<result property="inquiry_date" column="inquiry_date" />
+		<result property="answer_detail" column="answer_detail" />
+		<result property="answer_date" column="answer_date" />
+		<result property="member_number" column="member_number" />		
+	</resultMap>
+	
+	<!-- 책 -->
+	
+	<select id="managerbook" parameterType="bookDTO" resultType="bookDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    (select count(*) from book_like where book_number = sorted_table.book_number) like_count,
+			    (select count(*) from book_star where book_number = sorted_table.book_number) star_count,
+			    (select sum(star_count)  from book_star where book_number = sorted_table.book_number) star_sum,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select book.*
+			        from book
+			        order by book_number desc
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="book_name != null and book_name != '' and book_name !='null'">
+						lower(book_name) like lower('%' || #{book_name} || '%')
+					</when>	
+					<otherwise>
+						lower(book_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+	</select>
+	
+	<select id="bookTotal" parameterType="bookDTO" resultType="int" >
+		select 
+		    count(*)
+		from(
+		    select rownum as rnum, tmp.*
+		    from(
+		        select book.*
+		        from book
+		        order by book_number desc
+		        ) tmp
+		    ) sorted_table
+		<where>
+			<choose>
+				<when test="book_name != null and book_name != '' and book_name !='null'">
+					lower(book_name) like lower('%' || #{book_name} || '%')
+				</when>	
+				<otherwise>
+					lower(book_name) like lower('%%')					
+				</otherwise>		
+			</choose>
+		</where>	
+	</select>
+	
+	<insert id="createBook" parameterType="bookDTO">
+		INSERT INTO book(   
+	        book_number, 
+	        book_name, 
+	        book_price, 
+	        book_img, 
+	        publication_date, 
+	        author, 
+	        translator, 
+	        publisher, 
+	        book_detail
+	    )
+	    VALUES(
+	    	book_seq.nextval,
+	    	#{book_name},
+	    	#{book_price},
+	    	#{book_img},
+	    	#{publication_date},
+	    	#{author},
+	    	#{translator},
+	    	#{publisher},
+	    	#{book_detail}
+	    )
+	</insert>
+	
+	
+	<select id="managerBookDetail" parameterType="java.util.List" resultType="bookDTO">
+		select *
+		from book
+		<where>
+			book_number = #{book_number}
+		</where> 
+	</select>
+	
+	<update id="updateBook" parameterType="java.util.List">
+		update 
+			book
+		set
+			book_name = #{book_name},
+			book_price = #{book_price},
+			publication_date = #{publication_date},
+			book_img = #{book_img},
+			author = #{author},
+			translator = #{translator},
+			publisher = #{publisher},
+			book_detail = #{book_detail}
+		<where>
+			book_number = #{book_number}
+		</where>
+	
+	</update>
+	
+	<delete id="deleteBook" parameterType="java.util.List">
+		delete from 
+			book
+		<where>
+			book_number in
+				<foreach item="book_number" collection="list" open="(" separator="," close=")">
+					#{book_number}
+				</foreach>
+		</where>
+	</delete>
+	
+	<select id="selectImg" resultType="bookDTO" parameterType="java.util.List">
+		select
+			book_img
+		from
+			book
+		<where>
+			book_number in 
+			<foreach item="book_number" collection="list" open="(" separator="," close=")">
+				#{book_number}
+			</foreach>
+		</where>
+	</select>
+	
+	<!-- 유저관리 -->
+	
+	<select id="managermember" parameterType="memberDTO" resultType="memberDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select member.*
+			        from member
+			        order by member_number desc
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="mid != null and mid != '' and mid !='null'">
+						lower(mid) like lower('%' || #{mid} || '%')
+					</when>	
+					<otherwise>
+						lower(mid) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+	</select>
+	
+		<select id="memberTotal" parameterType="memberDTO" resultType="int" >
+		select 
+		    count(*)
+		from(
+		    select rownum as rnum, tmp.*
+		    from(
+		        select member.*
+		        from member
+		        order by member_number desc
+		        ) tmp
+		    ) sorted_table
+		<where>
+			<choose>
+				<when test="mid != null and mid != '' and mid !='null'">
+					lower(mid) like lower('%' || #{mid} || '%')
+				</when>	
+				<otherwise>
+					lower(mid) like lower('%%')					
+				</otherwise>		
+			</choose>
+		</where>	
+	</select>
+	
+	<select id="memberDetail" parameterType="java.util.List" resultType="memberDTO">
+		select *
+		from member
+		<where>
+			member_number = #{member_number}
+		</where> 
+	</select>
+
+	<update id="memberUpdate" parameterType="java.util.List">
+		update 
+			member
+		set 
+			mid = #{mid},
+			mpw = #{mpw},
+			mname = #{mname},
+			birthday = #{birthday},
+			gender = #{gender},
+			email = #{email},
+			member_grade = #{member_grade},
+			password_question = #{password_question},
+			password_answer = #{password_answer}
+		<where>
+			member_number = #{member_number}
+		</where>
+	</update>
+	
+	<update id="grade_down" parameterType="java.util.List">
+		update
+			member
+		set
+			member_grade = 0
+		<where>
+			member_number in 
+			<foreach item="member_number" collection="list" open="(" separator="," close=")">
+				#{member_number}
+			</foreach>
+		</where>	
+	</update>
+	
+	<!-- 공지사항 -->
+	
+	<select id="managerNotice" parameterType="noticeDTO" resultType="noticeDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select notice.*
+			        from notice
+			        order by notice_number desc
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="notice_name != null and notice_name != '' and notice_name !='null'">
+						lower(notice_name) like lower('%' || #{notice_name} || '%')
+					</when>	
+					<otherwise>
+						lower(notice_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+	</select>
+	
+	<select id="noticeTotal" parameterType="noticeDTO" resultType="int" >
+		select 
+		    count(*)
+		from(
+		    select rownum as rnum, tmp.*
+		    from(
+		        select notice.*
+		        from notice
+		        order by notice_number desc
+		        ) tmp
+		    ) sorted_table
+		<where>
+			<choose>
+				<when test="notice_name != null and notice_name != '' and notice_name !='null'">
+					lower(notice_name) like lower('%' || #{notice_name} || '%')
+				</when>	
+				<otherwise>
+					lower(notice_name) like lower('%%')					
+				</otherwise>		
+			</choose>
+		</where>	
+	</select>
+	
+	<insert id="createNotice" parameterType="noticeDTO">
+		INSERT INTO notice(   
+	        notice_number, 
+	        notice_name, 
+	        notice_detail, 
+	        notice_date
+
+	    )
+	    VALUES(
+	    	notice_seq.nextval,
+	    	#{notice_name},
+	    	#{notice_detail},
+	    	sysdate
+	    )
+	</insert>		
+	
+	<select id="noticeDetail" parameterType="java.util.List" resultType="noticeDTO">
+		select *
+		from notice
+		<where>
+			notice_number = #{notice_number}
+		</where> 
+	</select>	
+
+	<update id="noticeUpdate" parameterType="java.util.List">
+		update 
+			notice
+		set 
+			notice_name = #{notice_name},
+			notice_detail = #{notice_detail}
+		<where>
+			notice_number = #{notice_number}
+		</where>
+	</update>
+	
+	<delete id="deleteNotice" parameterType="java.util.List">
+		delete from 
+			notice
+		<where>
+			notice_number in
+				<foreach item="notice_number" collection="list" open="(" separator="," close=")">
+					#{notice_number}
+				</foreach>
+		</where>
+	</delete>	
+	
+	<!-- 이벤트 -->
+	
+		
+	<select id="managerEvent" parameterType="eventDTO" resultType="eventDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select event.*
+			        from event
+			        order by event_number desc
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="event_name != null and event_name != '' and event_name !='null'">
+						lower(event_name) like lower('%' || #{event_name} || '%')
+					</when>	
+					<otherwise>
+						lower(event_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+	</select>
+	
+	<select id="eventTotal" parameterType="eventDTO" resultType="int" >
+		select 
+		    count(*)
+		from(
+		    select rownum as rnum, tmp.*
+		    from(
+		        select event.*
+		        from event
+		        order by event_number desc
+		        ) tmp
+		    ) sorted_table
+		<where>
+			<choose>
+				<when test="event_name != null and event_name != '' and event_name !='null'">
+					lower(event_name) like lower('%' || #{event_name} || '%')
+				</when>	
+				<otherwise>
+					lower(event_name) like lower('%%')					
+				</otherwise>		
+			</choose>
+		</where>	
+	</select>
+	
+	<insert id="createEvent" parameterType="eventDTO">
+		INSERT INTO event(   
+	        event_number, 
+	       	event_name, 
+	        event_img, 
+	        event_date,
+	        event_detail,
+	        event_period_start,
+	        event_period_end
+	    )
+	    VALUES(
+	    	event_seq.nextval,
+	    	#{event_name},
+	    	#{event_img},
+	    	sysdate,
+	    	#{event_detail},
+	    	#{event_period_start},
+	    	#{event_period_end}
+	    )
+	</insert>
+	
+	
+	<select id="managerEventDetail" parameterType="java.util.List" resultType="eventDTO">
+		select *
+		from event
+		<where>
+			event_number = #{event_number}
+		</where> 
+	</select>
+	
+	<update id="updateEvent" parameterType="java.util.List">
+		update 
+			event
+		set
+			event_name = #{event_name},
+			event_detail = #{event_detail},
+			event_img = #{event_img},
+			event_period_start = #{event_period_start},
+			event_period_end = #{event_period_end}
+		<where>
+			event_number = #{event_number}
+		</where>
+	
+	</update>
+	
+	<delete id="deleteEvent" parameterType="java.util.List">
+		delete from 
+			event
+		<where>
+			event_number in
+				<foreach item="event_number" collection="list" open="(" separator="," close=")">
+					#{event_number}
+				</foreach>
+		</where>
+	</delete>
+	
+	<select id="selectEventImg" resultType="eventDTO" parameterType="java.util.List">
+		select
+			event_img
+		from
+			event
+		<where>
+			event_number in 
+			<foreach item="event_number" collection="list" open="(" separator="," close=")">
+				#{event_number}
+			</foreach>
+		</where>
+	</select>
+	
+	<select id="eventImg" resultType="eventDTO" parameterType="java.util.List">
+		select
+			event_img
+		from
+			event
+		<where>
+			event_number = #{event_number}
+		</where>
+	</select>
+	
+</mapper>

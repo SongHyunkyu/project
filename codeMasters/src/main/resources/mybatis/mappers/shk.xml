@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shk">
+
+	<resultMap id="bookMap" type="bookDTO">
+		<result property="book_number" column="book_number" />
+		<result property="book_name" column="book_name" />
+		<result property="book_price" column="book_price" />
+		<result property="book_img" column="book_img" />
+		<result property="publication_date" column="publication_date" />
+		<result property="author" column="author" />
+		<result property="translator" column="translator" />
+		<result property="publisher" column="publisher" />
+		<result property="book_detail" column="book_detail" />
+	</resultMap>
+
+	<resultMap id="memberMap" type="memberDTO">
+		<result property="member_number" column="member_number" />
+		<result property="mid" column="mid" />
+		<result property="mpw" column="mpw" />
+		<result property="mname" column="mname" />
+		<result property="birthday" column="birthday" />
+		<result property="gender" column="gender" />
+		<result property="email" column="email" />
+		<result property="phone_number" column="phone_number" />
+		<result property="join_date" column="join_date" />
+		<result property="member_grade" column="member_grade" />
+		<result property="password_question" column="password_question" />
+		<result property="password_answer" column="password_answer" />
+	</resultMap>
+
+
+
+	<!-- 아이디 중복체크 -->
+	<select id="isUserid" resultType="int">
+		SELECT COUNT(*) FROM member
+		WHERE mid = lower(#{mid})
+	</select>
+
+	<!-- 회원가입 정보 저장 -->
+	<insert id="insert" parameterType="memberDTO">
+
+		INSERT INTO member
+		(member_number, mid, mpw, mname, birthday, gender, email,
+		phone_number, password_question, password_answer, member_grade,
+		join_date)
+		VALUES (
+		member_seq.NEXTVAL,
+		#{mid},
+		#{mpw},
+		#{mname},
+		#{birthday},
+		#{gender},
+		#{email},
+		#{phone_number},
+		#{password_question},
+		#{password_answer},
+		#{member_grade},
+		sysdate
+		)
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="login" parameterType="memberDTO"
+		resultType="memberDTO">
+		SELECT * FROM member WHERE mid = #{mid} AND mpw = #{mpw}
+	</select>
+
+	<!-- 장바구니에 있는 회원번호를 조회해서 일치하면 책번호를 조회하고 필요한 정보를 가져옴 -->
+	<select id="getCartItems" parameterType="int"
+		resultType="cartItemDTO">
+		SELECT c.cart_number, c.book_number, c.member_number,
+		c.amount, b.book_name, b.book_price, b.book_img
+		FROM cart c
+		INNER JOIN
+		book b ON c.book_number = b.book_number
+		WHERE c.member_number =
+		#{member_number}
+	</select>
+
+	<insert id="insertOrder" parameterType="orderDTO">
+		INSERT INTO PURCHASE (
+		PURCHASE_NUMBER,
+		TOTAL,
+		SHIPPING,
+		PURCHASE_DATE,
+		PURCHASE_NAME,
+		PURCHASE_PHONE,
+		PAYMENT,
+		MEMBER_NUMBER,
+		BOOK_NUMBER
+		)
+		VALUES(
+		purchase_seq.nextval,
+		#{total},
+		#{shipping},
+		sysdate,
+		#{purchase_name},
+		#{purchase_phone},
+		#{payment},
+		#{member_number},
+		#{book_number}
+		)
+
+	</insert>
+
+<select id="bookNum" resultType="bookDTO">
+	select * from book where book_number = #{book_number}
+</select>
+
+<delete id="deleteCart">
+	delete from cart where member_number = #{member_member}
+</delete>
+
+
+
+
+
+</mapper>

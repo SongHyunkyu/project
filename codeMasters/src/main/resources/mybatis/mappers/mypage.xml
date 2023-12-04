@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mypage">
+
+	<resultMap id="memberMap" type="memberDTO">
+		<result property="member_number" column="member_number" />
+		<result property="mid" column="mid" />
+		<result property="mpw" column="mpw" />
+		<result property="mname" column="mname" />
+		<result property="birthday" column="birthday" />
+		<result property="gender" column="gender" />
+		<result property="email" column="email" />
+		<result property="phone_number" column="phone_number" />
+		<result property="join_date" column="join_date" />
+		<result property="member_grade" column="member_grade" />
+		<result property="password_question" column="password_question" />
+		<result property="password_answer" column="password_answer" />
+	</resultMap>
+	
+	<select id="memberDetail" parameterType="java.util.List" resultType="memberDTO">
+		select *
+		from member
+		<where>
+			member_number = #{member_number}
+		</where> 
+	</select>
+
+	<update id="infoUpdate" parameterType="java.util.List">
+		update 
+			member
+		set 
+			mid = #{mid},
+			mpw = #{mpw},
+			mname = #{mname},
+			birthday = #{birthday},
+			gender = #{gender},
+			email = #{email},
+			password_question = #{password_question},
+			password_answer = #{password_answer}
+		<where>
+			member_number = #{member_number}
+		</where>
+	</update>
+</mapper>

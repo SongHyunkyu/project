@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="events">
+
+	<resultMap id="eventMap" type="eventDTO">
+		<result property="event_number" column="event_number" />
+		<result property="event_name" column="event_name" />
+		<result property="event_img" column="event_img" />
+		<result property="event_detail" column="event_detail" />
+		<result property="event_period_start" column="event_period_start" />
+		<result property="event_period_end" column="event_period_end" />
+		<result property="event_date" column="event_date" />
+	</resultMap>
+	
+	<select id="events" parameterType="eventDTO" resultType="eventDTO">
+			select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select event.*
+			        from event
+			        order by event_number desc
+			        ) tmp
+			    ) sorted_table
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+	</select>
+	
+	<select id="eventsTotal" resultType="int">
+		select 
+		    count(*)
+		from
+			event
+	</select>
+
+	
+	
+</mapper>

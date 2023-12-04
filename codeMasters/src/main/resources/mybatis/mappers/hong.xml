@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="hong">
+
+	<resultMap id="memberMap" type="memberDTO">
+		<result property="name" column="mname" />
+		<result property="email" column="email" />
+	</resultMap>
+
+
+
+
+	<select id="findUserId" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select mid from member where email = #{id_email_text}
+		and mname =
+		#{id_name_text}
+	</select>
+
+	<select id="findUserPw" resultType="java.util.Map"
+		parameterType="java.util.Map">
+		select mpw from member where mid = #{pw_id_text} and
+		mname = #{pw_name_text}
+		and email = #{pw_email_text} and
+		password_question = #{pw_hint_text}
+		and password_answer =
+		#{pw_answer_text}
+	</select>
+
+	<update id="ReSetUserPw" parameterType="java.util.Map">
+		update member set mpw = #{pw_text} where mid = #{return}
+	</update>
+
+	<select id="getCartList" resultType="java.util.Map"
+		parameterType="java.util.Map">
+
+		Select 
+
+  		A.cart_number
+      ,A.book_number as book_number
+      ,A.member_number as member_number
+      ,A.amount as amount
+      ,B.book_price as book_price
+      ,B.book_name as book_name
+      ,B.book_img as book_img
+      ,B.publication_date as publication_date
+      ,B.author as author
+      ,B.translator as translator
+      ,B.publisher as publisher
+      ,B.book_detail as book_detail
+      ,B.temp_file as temp_file
+      ,B.field12 as field12
+      ,B.field13 as field13
+      ,B.field14 as field14
+
+      from CART A
+      
+      left outer join BOOK B
+      on A.book_number=B.book_number
+      
+      where A.member_number=#{member}
+	</select>
+
+	<delete id="deleteCart"  parameterType="java.util.Map">
+		
+		delete from cart where  cart_number = #{cart_number}
+	
+	</delete>
+
+
+</mapper>

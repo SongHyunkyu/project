@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="book">
+
+	<resultMap id="bookMap" type="bookDTO">
+		<result property="book_number" column="book_number" />
+		<result property="book_name" column="book_name" />
+		<result property="book_price" column="book_price" />
+		<result property="book_img" column="book_img" />
+		<result property="publication_date" column="publication_date" />
+		<result property="author" column="author" />
+		<result property="translator" column="translator" />
+		<result property="publisher" column="publisher" />
+		<result property="book_detail" column="book_detail" />
+		<result property="like_count" column="like_count" />
+		<result property="star_count" column="star_count" />
+		<result property="star_sum" column="star_sum" />
+	</resultMap>
+
+
+
+
+
+	<select id="selectBookSort1" parameterType="bookDTO" resultType="bookDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    (select count(*) from book_like where book_number = sorted_table.book_number) like_count,
+			    (select count(*) from book_star where book_number = sorted_table.book_number) star_count,
+			    (select sum(star_count)  from book_star where book_number = sorted_table.book_number) star_sum,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select book.*
+			        from book
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="book_name != null and book_name != '' and book_name !='null'">
+						lower(book_name) like lower('%' || #{book_name} || '%')
+					</when>	
+					<otherwise>
+						lower(book_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+		order by book_number desc
+	</select>
+	<select id="selectBookSort2" parameterType="bookDTO" resultType="bookDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    (select count(*) from book_like where book_number = sorted_table.book_number) like_count,
+			    (select count(*) from book_star where book_number = sorted_table.book_number) star_count,
+			    (select sum(star_count)  from book_star where book_number = sorted_table.book_number) star_sum,
+        		(select count(*) from purchase where book_number = sorted_table.book_number) sell_count,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select book.*
+			        from book
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="book_name != null and book_name != '' and book_name !='null'">
+						lower(book_name) like lower('%' || #{book_name} || '%')
+					</when>	
+					<otherwise>
+						lower(book_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+		order by sell_count desc
+	</select>
+	<select id="selectBookSort3" parameterType="bookDTO" resultType="bookDTO">
+		select
+			NVL(star_tmp, 0) as star,
+    		last_table.*
+		from(
+			select
+				(select star_sum/star_count from book where book_number = searched_table.book_number) star_tmp,
+				searched_table.*
+			from(	
+				select 
+					rownum as rnum1,
+					(select count(*) from book_like where book_number = sorted_table.book_number) like_count,
+					(select count(*) from book_star where book_number = sorted_table.book_number) star_count,
+					(select sum(star_count)  from book_star where book_number = sorted_table.book_number) star_sum,
+		        	(select count(*) from purchase where book_number = sorted_table.book_number) sell_count,
+					sorted_table.*
+				from(
+					select rownum as rnum2, tmp.*
+					from(
+					    select book.*
+					    from book
+					    ) tmp
+					) sorted_table
+				<where>
+					<choose>
+						<when test="book_name != null and book_name != '' and book_name !='null'">
+							lower(book_name) like lower('%' || #{book_name} || '%')
+						</when>	
+						<otherwise>
+							lower(book_name) like lower('%%') 					
+						</otherwise>		
+					</choose>
+				</where>
+				)searched_table
+			<where>
+				rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+			</where>
+		)last_table
+		order by star desc
+	</select>
+		<select id="selectBookSort4" parameterType="bookDTO" resultType="bookDTO">
+		select searched_table.*
+		from (	
+			select 
+				rownum as rnum1,
+			    (select count(*) from book_like where book_number = sorted_table.book_number) like_count,
+			    (select count(*) from book_star where book_number = sorted_table.book_number) star_count,
+			    (select sum(star_count)  from book_star where book_number = sorted_table.book_number) star_sum,
+        		(select count(*) from purchase where book_number = sorted_table.book_number) sell_count,
+			    sorted_table.*
+			from(
+			    select rownum as rnum2, tmp.*
+			    from(
+			        select book.*
+			        from book
+			        ) tmp
+			    ) sorted_table
+			<where>
+				<choose>
+					<when test="book_name != null and book_name != '' and book_name !='null'">
+						lower(book_name) like lower('%' || #{book_name} || '%')
+					</when>	
+					<otherwise>
+						lower(book_name) like lower('%%') 					
+					</otherwise>		
+				</choose>
+			</where>
+			)searched_table
+		<where>
+			rnum1 <![CDATA[>=]]>  #{startNum} and rnum1 <![CDATA[<=]]> #{endNum}
+		</where>
+		order by like_count desc
+	</select>
+	<select id="bookTotal" parameterType="bookDTO" resultType="int" >
+		select 
+		    count(*)
+		from(
+		    select rownum as rnum, tmp.*
+		    from(
+		        select book.*
+		        from book
+		        order by book_number desc
+		        ) tmp
+		    ) sorted_table
+		<where>
+			<choose>
+				<when test="book_name != null and book_name != '' and book_name !='null'">
+					lower(book_name) like lower('%' || #{book_name} || '%')
+				</when>	
+				<otherwise>
+					lower(book_name) like lower('%%')					
+				</otherwise>		
+			</choose>
+		</where>	
+	</select>
+	
+		
+	<select id="bookDetail" parameterType="java.util.List" resultType="bookDTO">
+		select *
+		from book
+		<where>
+			book_number = #{book_number}
+		</where> 
+	</select>
+	
+	<select id="best" parameterType="java.util.List" resultType="bookDTO">
+		select *
+		from(
+            select
+                (select count(*) from purchase where book_number = book.book_number) sell_count,
+                book.*
+            from book
+            ) tmp
+         order by sell_count desc
+	</select>
+	
+	<select id="new" parameterType="java.util.List" resultType="bookDTO">
+		select *
+		from book
+		order by book_number desc
+	</select>
+
+
+<select id="star" resultType="double">
+select ROUND(SUM(star_count) / COUNT(comments_number), 1) AS result
+from book_star
+where book_number = #{book_number}
+</select>
+
+<select id="star_count" resultType="int">
+select count(*)
+from book_star
+where book_number=#{book_number}
+</select>
+	
+
+
+</mapper>
